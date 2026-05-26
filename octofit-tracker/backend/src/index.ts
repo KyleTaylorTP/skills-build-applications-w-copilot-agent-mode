@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { connectDatabase, getDatabaseUri } from './config/database';
 import usersRouter from './routes/users';
 import teamsRouter from './routes/teams';
 import activitiesRouter from './routes/activities';
@@ -12,7 +12,6 @@ dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 8000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/octofit';
 
 // Helper function to get API URL with Codespaces support
 const getApiUrl = (): string => {
@@ -27,14 +26,10 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-  });
+connectDatabase().catch((err) => {
+  console.error('Failed to connect to database:', err);
+  process.exit(1);
+});
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
