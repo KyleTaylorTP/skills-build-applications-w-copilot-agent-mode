@@ -1,7 +1,8 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDatabase, getDatabaseUri } from './config/database';
+import { connectDatabase } from './config/database';
+import { getApiUrl, getApiBaseUrl, isCodespaces } from './config/api';
 import usersRouter from './routes/users';
 import teamsRouter from './routes/teams';
 import activitiesRouter from './routes/activities';
@@ -12,14 +13,6 @@ dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 8000;
-
-// Helper function to get API URL with Codespaces support
-const getApiUrl = (): string => {
-  if (process.env.CODESPACE_NAME) {
-    return `https://${process.env.CODESPACE_NAME}-8000.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`;
-  }
-  return `http://localhost:${PORT}`;
-};
 
 // Middleware
 app.use(cors());
@@ -36,20 +29,26 @@ app.get('/', (req: Request, res: Response) => {
   res.json({
     message: 'OctoFit Tracker API',
     apiUrl: getApiUrl(),
+    environment: isCodespaces() ? 'Codespaces' : 'localhost',
     endpoints: {
-      users: '/api/users',
-      teams: '/api/teams',
-      activities: '/api/activities',
-      leaderboard: '/api/leaderboard',
-      workouts: '/api/workouts',
-      health: '/api/health',
+      users: `${getApiBaseUrl()}/users`,
+      teams: `${getApiBaseUrl()}/teams`,
+      activities: `${getApiBaseUrl()}/activities`,
+      leaderboard: `${getApiBaseUrl()}/leaderboard`,
+      workouts: `${getApiBaseUrl()}/workouts`,
+      health: `${getApiBaseUrl()}/health`,
     },
   });
 });
 
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString(), apiUrl: getApiUrl() });
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    apiUrl: getApiUrl(),
+    environment: isCodespaces() ? 'Codespaces' : 'localhost',
+  });
 });
 
 // Mount route handlers
@@ -61,6 +60,11 @@ app.use('/api/workouts', workoutsRouter);
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`Server is running on ${getApiUrl()}`);
-  console.log(`Port: ${PORT}`);
+  const apiUrl = getApiUrl();
+  const environment = isCodespaces() ? 'Codespaces' : 'localhost';
+  console.log(`\n✓ OctoFit Tracker API Server Started`);
+  console.log(`  Environment: ${environment}`);
+  console.log(`  API URL: ${apiUrl}`);
+  console.log(`  Port: ${PORT}`);
+  console.log(`  Base Path: ${getApiBaseUrl()}\n`);
 });
