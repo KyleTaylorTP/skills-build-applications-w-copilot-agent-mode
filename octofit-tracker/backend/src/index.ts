@@ -2,7 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDatabase } from './config/database';
-import { getApiUrl, getApiBaseUrl, isCodespaces } from './config/api';
+import { getApiUrl, getApiBaseUrl, isCodespaces } from './config/server';
 import usersRouter from './routes/users';
 import teamsRouter from './routes/teams';
 import activitiesRouter from './routes/activities';
